@@ -18,7 +18,15 @@ public class CommandRegistry {
 
     public CommandRegistry(List<SlashCommand> commands) {
         this.commandMap = commands.stream()
-                .collect(Collectors.toMap(SlashCommand::getName, Function.identity()));
+                .collect(Collectors.toUnmodifiableMap(
+                        SlashCommand::name,
+                        Function.identity(),
+                        (left, right) -> {
+                            throw new IllegalStateException(
+                                    "중복된 Slash Command 이름입니다. name=" + left.name()
+                            );
+                        }
+                ));
 
         log.info("Slash Command 로드 완료 - count={}", commandMap.size());
     }
@@ -27,11 +35,28 @@ public class CommandRegistry {
         SlashCommand command = commandMap.get(event.getName());
 
         if (command == null) {
-            event.reply("지원하지 않는 명령어입니다.").setEphemeral(true).queue();
+            event.reply("지원하지 않는 명령어입니다.")
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
 
-        command.execute(event);
+        try {
+            command.execute(event);
+        } catch (Exception exception) {
+            log.error("Slash Command 실행 실패 - command={}", event.getName(), exception);
+
+            if (!event.isAcknowledged()) {
+                event.reply("명령어 실행 중 오류가 발생했습니다.")
+                        .setEphemeral(true)
+                        .queue();
+            } else {
+                event.getHook()
+                        .sendMessage("명령어 실행 중 오류가 발생했습니다.")
+                        .setEphemeral(true)
+                        .queue();
+            }
+        }
     }
 
     public List<SlashCommand> getCommands() {
