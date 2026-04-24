@@ -1,3 +1,10 @@
+/*
+*  Slash Command를 Discord Guild에 등록
+*
+*  CommandRegistry에서 수집한 명령어 등록 정보를 가져와 Discord API에 동기화하는 책임만 담당합니다.
+*  실제 명령어 실행 로직은 각 SlashCommand 구현체에 위임됩니다.
+* */
+
 package com.undery.dersoon_discord.discordinfra;
 
 import com.undery.dersoon_discord.command.SlashCommand;
@@ -18,9 +25,12 @@ public class CommandRegistrar {
 
     private final CommandRegistry commandRegistry;
 
+    // Global과 Guild가 있지만, Guild로 한 이유는 빠른 테스팅을 위해서이다.
+    // 추후 Public으로 전환 시 Global에 맞게 수정이 필요하다. (jdk)
     @Value("${discord.guild.id}")
     private String guildId;
 
+    // Guild ID는 Test용 서버 ID임.
     public void registerGuildCommands(JDA jda) {
         Guild guild = jda.getGuildById(guildId);
 

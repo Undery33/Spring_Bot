@@ -1,3 +1,12 @@
+/*
+*  Slash Command 구현체를 이름 기준으로 관리하고 실행
+*
+*  Spring Bean으로 등록된 SlashCommand 목록을 수집하여
+*  명령어 이름과 구현체를 매핑합니다.
+*
+*  Listener는 구체 명령어 클래스를 알 필요 없이 이 Registry에 실행을 위임합니다.
+* */
+
 package com.undery.dersoon_discord.discordinfra;
 
 import com.undery.dersoon_discord.command.SlashCommand;
@@ -16,6 +25,7 @@ public class CommandRegistry {
 
     private final Map<String, SlashCommand> commandMap;
 
+    // Slash Command 등록
     public CommandRegistry(List<SlashCommand> commands) {
         this.commandMap = commands.stream()
                 .collect(Collectors.toUnmodifiableMap(
@@ -31,9 +41,11 @@ public class CommandRegistry {
         log.info("Slash Command 로드 완료 - count={}", commandMap.size());
     }
 
+    // Slash Command 실행
     public void execute(SlashCommandInteractionEvent event) {
         SlashCommand command = commandMap.get(event.getName());
 
+        // 명령어 없을 시
         if (command == null) {
             event.reply("지원하지 않는 명령어입니다.")
                     .setEphemeral(true)
@@ -41,6 +53,7 @@ public class CommandRegistry {
             return;
         }
 
+        // 실행에 실패하였을 시
         try {
             command.execute(event);
         } catch (Exception exception) {
