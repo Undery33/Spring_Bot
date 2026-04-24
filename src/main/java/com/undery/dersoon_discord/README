@@ -1,0 +1,69 @@
+# Structure
+src/main/java/com/undery/dersoon_discord
+├── command
+├── config
+├── discordinfra
+└── listener
+
+## command
+Discord Slash Command의 인터페이스와 실제 명령어 구현체를 관리
+
+해당 패키지는 봇의 기능 단위를 담당합니다.
+추가될 명령어들을 위해 각각 별도의 클래스로 분리하였습니다.
+
+해당 역할은 다음과 같습니다.
+* 명령어 공통 규격 정의
+* 명령어별 실행 로직 구현
+* 기능 단위 클래스 분리
+* 새 명령어 추가 시 기존 코드 수정 최소화
+
+---
+## config
+Spring Boot와 외부 라이브러리 설정 관리
+
+현재는 JDA 객체를 생성하고 Discord Bot을 초기화하는 DiscordConfig를 포함합니다.
+
+해당 역할은 다음과 같습니다.
+* Discord Bot Token 주입
+* JDA 인스턴스 생성
+* Discord Gateway 연결
+* 어플리케이션 종료 시 JDA 종료 처리
+
+---
+## discord
+Discord API 연동과 명령어 실행 흐름 관리
+
+command 패키지가 실제 기능을 담당한다면, discord 패키지는 해당 기능을 Discord에 등록하고 실행 가능한 현태로 연결합니다.
+
+해당 역할은 다음과 같습니다.
+* SlashCommand 등록
+* 명령어 목록 관리
+* 명령어 이름으로 실행할 Command 탐색
+* Discord 이벤트와 실제 명령어 구현체 연결
+
+---
+## listener
+Discord에서 발생한 이벤트 수신
+
+현재는 Slash Command 입력 이벤트를 받아 CommandRegistry로 전달하는 역할을 합니다.
+
+해당 역할은 다음과 같습니다.
+* Discord 이벤트 수신
+* Slash Command Interaction 감지
+* 사용자 입력 로그 기록
+* 명령어 실행 처리를 CommandRegistry에 위임
+
+---
+# 실제 Command 흐름
+1. Spring Boot 애플리케이션 실행
+2. DiscordConfig에서 JDA 생성
+3. Discord Gateway 연결
+4. CommandRegistrar가 Slash Command 등록
+5. 사용자가 Discord에서 Slash Command 입력
+6. DiscordEventListener가 이벤트 수신
+7. CommandRegistry가 명령어 이름으로 Command 탐색
+8. 해당 Command 실행
+9. Discord에 응답 반환
+
+새 명령어를 추가할 때는 command 패키지 아래에 SlashCommand 구현체를 추가하면 됩니다.
+CommandRegistrar와 CommandRegistry가 이를 자동으로 등록합니다.
